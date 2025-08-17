@@ -1,18 +1,19 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import './globals.css'
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import "./globals.css";
+import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
 
 export const metadata: Metadata = {
-  title: 'Nexus',
-  description: 'Nexus',
-  generator: 'Nexus',
-}
+  title: "Nexus",
+  description: "Nexus",
+  generator: "Nexus",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -25,7 +26,9 @@ html {
 }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthKitProvider>{children}</AuthKitProvider>
+      </body>
     </html>
-  )
+  );
 }
