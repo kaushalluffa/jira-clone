@@ -37,9 +37,9 @@ export default function LandingPage() {
           management platform. Built for teams who want to ship faster.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/dashboard">
+          <Link href="/sign-up">
             <Button size="lg" className="gap-2">
-              Try Demo <ArrowRight className="h-4 w-4" />
+              Sign Up <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
           <Button
