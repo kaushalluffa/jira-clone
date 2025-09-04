@@ -4,7 +4,7 @@ import {  Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import Link from 'next/link';
 
-const PublicHeader = () => {
+export const PublicHeader = () => {
   return (
     <header className="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -24,5 +24,3 @@ const PublicHeader = () => {
     </header>
   );
 }
-
-export default PublicHeader
