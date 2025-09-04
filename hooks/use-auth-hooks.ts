@@ -1,64 +1,74 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut, signIn, signUp } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
-// Enhanced session hook with React Query
 export function useAuthSession() {
   const { data: session, isPending } = useSession();
-
-  return useQuery({
-    queryKey: ["auth", "session"],
-    queryFn: () => session,
-    enabled: !isPending,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    select: (data) => ({
-      user: data?.user || null,
-      session: data?.session || null,
-      isAuthenticated: !!data?.session?.token,
-    }),
+  const [state, setState] = useState<{
+    user: any;
+    session: any;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+  }>({
+    user: null,
+    session: null,
+    isAuthenticated: false,
+    isLoading: true,
   });
+
+  useEffect(() => {
+    if (!isPending) {
+      setState({
+        user: session?.user ?? null,
+        session: session?.session ?? null,
+        isAuthenticated: !!session?.session?.token,
+        isLoading: false,
+      });
+    }
+  }, [session, isPending]);
+  return state;
 }
 
-// Sign in mutation
+// Sign in hook
 export function useSignIn() {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  return useMutation({
-    mutationFn: async ({
-      email,
-      password,
-    }: {
-      email: string;
-      password: string;
-    }) => {
-      const result = await signIn.email({
-        email,
-        password,
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message);
+  const signInHandler = useCallback(
+    async ({ email, password }: { email: string; password: string }) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await signIn.email({ email, password });
+        if (result.error) {
+          setError(result.error.message ?? "Unknown error");
+          setLoading(false);
+          return { error: result.error };
+        }
+        router.push("/dashboard");
+        setLoading(false);
+        return result;
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+        setLoading(false);
+        return { error: err };
       }
+    },
+    [router]
+  );
 
-      return result;
-    },
-    onSuccess: (data) => {
-      // Invalidate auth queries
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
-      // Redirect to dashboard or intended page
-      router.push("/dashboard");
-    },
-  });
+  return { signIn: signInHandler, loading, error };
 }
 
-// Sign up mutation
+// Sign up hook
 export function useSignUp() {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  return useMutation({
-    mutationFn: async ({
+  const signUpHandler = useCallback(
+    async ({
       email,
       password,
       name,
@@ -67,55 +77,66 @@ export function useSignUp() {
       password: string;
       name: string;
     }) => {
-      const result = await signUp.email({
-        email,
-        password,
-        name,
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message);
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await signUp.email({ email, password, name });
+        if (result.error) {
+          setError(result.error.message ?? "Unknown error");
+          setLoading(false);
+          return { error: result.error };
+        }
+        router.push("/dashboard");
+        setLoading(false);
+        return result;
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+        setLoading(false);
+        return { error: err };
       }
+    },
+    [router]
+  );
 
-      return result;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
-      router.push("/dashboard");
-    },
-  });
+  return { signUp: signUpHandler, loading, error };
 }
 
-// Sign out mutation
+// Sign out hook
 export function useSignOut() {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  return useMutation({
-    mutationFn: async () => {
+  const signOutHandler = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
       await signOut();
-    },
-    onSuccess: () => {
-      // Clear all queries when signing out
-      queryClient.clear();
-      router.push("/login");
-    },
-  });
+      router.push("/sign-in");
+      setLoading(false);
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
+      setLoading(false);
+    }
+  }, [router]);
+
+  return { signOut: signOutHandler, loading, error };
 }
 
 // Hook to require authentication
 export function useRequireAuth() {
-  const { data: authData, isLoading } = useAuthSession();
+  const { isAuthenticated, user, isLoading } = useAuthSession();
   const router = useRouter();
 
-  // Redirect if not authenticated
-  if (!isLoading && !authData?.isAuthenticated) {
-    router.push("/login");
-  }
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/sign-in");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   return {
-    isAuthenticated: authData?.isAuthenticated || false,
-    user: authData?.user || null,
+    isAuthenticated: isAuthenticated || false,
+    user: user || null,
     isLoading,
   };
 }
