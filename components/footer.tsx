@@ -2,7 +2,7 @@ import { Zap } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-const Footer = () => {
+export const Footer = () => {
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto px-4 py-12">
@@ -74,4 +74,3 @@ const Footer = () => {
   );
 };
 
-export default Footer;
